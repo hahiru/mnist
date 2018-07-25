@@ -19,7 +19,7 @@ class FaceDetector:
     __slots__ = ['_face_cascade', '_eye_cascade', '_logger']
     
     def __init__(self):
-        self._face_cascade = cv2.CascadeClassifier(DEFAULT)
+        self._face_cascade = cv2.CascadeClassifier(TREE)
         self._eye_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
         self._logger = getLogger('facedetector')
 
@@ -53,8 +53,9 @@ class FaceDetector:
         print(rows, cols, colors, hypot)
         frame = numpy.zeros((hypot, hypot, colors), numpy.uint8)
         frame[int((hypot - rows) * 0.5):int((hypot + rows) * 0.5), int((hypot - cols) * 0.5):int((hypot + cols) * 0.5)] = resize_img
-     
-        for deg in range(-50, 51, 5):
+
+        deg_num = 0
+        for deg in range(-180, 180, 5):
             M = cv2.getRotationMatrix2D((hypot * 0.5, hypot * 0.5), -deg, 1.0)
             rotated = cv2.warpAffine(frame, M, (hypot, hypot))
             gray = cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
@@ -64,8 +65,9 @@ class FaceDetector:
                 eyes = self._eye_cascade.detectMultiScale(rotated)
                 for (ex,ey,ew,eh) in eyes:
                     cv2.rectangle(rotated,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
-            cv2.imwrite(os.path.join(save_dir, '{:03}_{}.png'.format(num, deg)), rotated)
-            
+            cv2.imwrite(os.path.join(save_dir, '{:03}_{:03}.png'.format(num, deg_num)), rotated)
+            deg_num += 1
+
     def save_and_triming(self, img_list: List[ndarray], save_dir: str) -> None:
         triming_list = []
         for img in img_list:
