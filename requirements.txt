@@ -1,0 +1,3 @@
+numpy == 1.14.5
+opencv-python == 3.4.1.15 
+-e git+ssh://git@github.com/carpedm20/DCGAN-tensorflow.git#egg=DCGAN

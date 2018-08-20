@@ -19,7 +19,7 @@ class FaceDetector:
     __slots__ = ['_face_cascade', '_eye_cascade', '_logger']
     
     def __init__(self):
-        self._face_cascade = cv2.CascadeClassifier(TREE)
+        self._face_cascade = cv2.CascadeClassifier(DEFAULT)
         self._eye_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
         self._logger = getLogger('facedetector')
 
@@ -50,7 +50,6 @@ class FaceDetector:
         resize_img = self.resize_image(img)
         rows, cols, colors = resize_img.shape
         hypot = int(math.hypot(rows, cols))
-        print(rows, cols, colors, hypot)
         frame = numpy.zeros((hypot, hypot, colors), numpy.uint8)
         frame[int((hypot - rows) * 0.5):int((hypot + rows) * 0.5), int((hypot - cols) * 0.5):int((hypot + cols) * 0.5)] = resize_img
 
@@ -66,6 +65,25 @@ class FaceDetector:
                 for (ex,ey,ew,eh) in eyes:
                     cv2.rectangle(rotated,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
             cv2.imwrite(os.path.join(save_dir, '{:03}_{:03}.png'.format(num, deg_num)), rotated)
+            deg_num += 1
+
+    def triming_rotate_image(self, img: ndarray, save_dir, num):
+        resize_img = self.resize_image(img)
+        rows, cols, colors = resize_img.shape
+        hypot = int(math.hypot(rows, cols))
+        frame = numpy.zeros((hypot, hypot, colors), numpy.uint8)
+        frame[int((hypot - rows) * 0.5):int((hypot + rows) * 0.5), int((hypot - cols) * 0.5):int((hypot + cols) * 0.5)] = resize_img
+
+        deg_num = 0
+        for deg in range(-180, 180, 5):
+            M = cv2.getRotationMatrix2D((hypot * 0.5, hypot * 0.5), -deg, 1.0)
+            rotated = cv2.warpAffine(frame, M, (hypot, hypot))
+            gray = cv2.cvtColor(rotated, cv2.COLOR_BGR2GRAY)
+            faces = self._face_cascade.detectMultiScale(gray)
+            for (x, y, w, h) in faces:
+                eyes = self._eye_cascade.detectMultiScale(gray)
+                if len(eyes) > 1:
+                    cv2.imwrite(os.path.join(save_dir, '{:03}_{:03}.png'.format(num, deg_num)), rotated[y:y+h, x:x+w])
             deg_num += 1
 
     def save_and_triming(self, img_list: List[ndarray], save_dir: str) -> None:
@@ -151,7 +169,7 @@ class FaceDetector:
         # self.save_image(detected_img_list, save_dir)
         n = 1
         img = self.load_image(image_dir)
-        self.rotate_image(img, save_dir, n)
+        self.triming_rotate_image(img, save_dir, n)
         '''
         for img in img_list:
             self.rotate_image(img, save_dir, n)

@@ -1,7 +1,8 @@
 import os
 from PIL import Image
 
-save_dir = 'detected/rotated-tree/'
+# save_dir = 'detected/rotated-tree/'
+save_dir = '/Users/takahito.ishida/samples/'
 
 images = []
 files = os.listdir(save_dir)
@@ -11,5 +12,5 @@ for file_name in files:
         im = Image.open(os.path.join(save_dir, file_name))
         images.append(im)
 
-images[0].save('tree.gif',
+images[0].save('samples.gif',
                save_all=True, append_images=images[1:], optimize=False, duration=100, loop=0)
