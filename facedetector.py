@@ -17,9 +17,9 @@ MAX_COLS = 400
 
 class FaceDetector:
     __slots__ = ['_face_cascade', '_eye_cascade', '_logger']
-    
+
     def __init__(self):
-        self._face_cascade = cv2.CascadeClassifier(DEFAULT)
+        self._face_cascade = cv2.CascadeClassifier(ALT)
         self._eye_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
         self._logger = getLogger('facedetector')
 
@@ -45,7 +45,7 @@ class FaceDetector:
             resize_cols = MAX_COLS
         resize_img = cv2.resize(img, (resize_cols, resize_rows))
         return resize_img
-            
+
     def rotate_image(self, img: ndarray, save_dir, num):
         resize_img = self.resize_image(img)
         rows, cols, colors = resize_img.shape
@@ -90,12 +90,12 @@ class FaceDetector:
         triming_list = []
         for img in img_list:
             triming_list.extend(self.triming(img))
-        
+
         num = 1
         for img in triming_list:
             cv2.imwrite(os.path.join(save_dir, '{:03}.png'.format(num)), img)
             num += 1
-            
+
     def triming(self, img: ndarray) -> List[ndarray]:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = self._face_cascade.detectMultiScale(gray)
@@ -119,6 +119,7 @@ class FaceDetector:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # 顔を検知
         faces = self._face_cascade.detectMultiScale(gray)
+        print(faces)
         for (x,y,w,h) in faces:
             # 検知した顔を矩形で囲む
             cv2.rectangle(img,(x,y),(x+w,y+h),(0,0,255),2)
@@ -133,6 +134,11 @@ class FaceDetector:
                 cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
         return img
 
+    def is_face_image(self, img: ndarray) -> ndarray:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = self._face_cascade.detectMultiScale(gray, minNeighbors=2)
+        return True if len(faces) else False
+
     def _is_image(self, image_file: str) -> bool:
         filename, ext = os.path.splitext(image_file)
         if ext in ['.jpg', '.jpeg', '.png', '.bmp']:
@@ -144,7 +150,7 @@ class FaceDetector:
         self._logger.info('load: {}'.format(image_file))
         if os.path.isfile(image_file) and self._is_image(image_file):
             return cv2.imread(image_file)
-        
+
     def load_images(self, image_dir: str) -> List[ndarray]:
         files = os.listdir(image_dir)
         image_list = []
@@ -153,14 +159,14 @@ class FaceDetector:
             if os.path.isfile(os.path.join(image_dir, file_name)) and self._is_image(file_name):
                 image_list.append(cv2.imread(os.path.join(image_dir, file_name)))
         return image_list
-    
+
     def save_image(self, img_list: List[ndarray], save_dir: str) -> None:
-        self._logger('save dir: {}'.format(save_dir))
+        # self._logger('save dir: {}'.format(save_dir))
         num = 1
         for img in img_list:
             cv2.imwrite(os.path.join(save_dir, '{:03}.png'.format(num)), img)
             num += 1
-    
+
     def run(self, image_dir: str, save_dir: str) -> None:
         # img_list = self.load_images(image_dir)
         # self.save_and_triming(img_list, save_dir)
@@ -169,7 +175,10 @@ class FaceDetector:
         # self.save_image(detected_img_list, save_dir)
         n = 1
         img = self.load_image(image_dir)
-        self.triming_rotate_image(img, save_dir, n)
+        print(self.is_face_image(img))
+        #detected = self.detect(img)
+        #cv2.imwrite(os.path.join(save_dir, os.path.basename(image_dir)), detected)
+        # self.triming_rotate_image(img, save_dir, n)
         '''
         for img in img_list:
             self.rotate_image(img, save_dir, n)
